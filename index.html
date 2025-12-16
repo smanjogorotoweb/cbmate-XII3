@@ -1,0 +1,1328 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chatbot XII-3</title>
+  <style>
+    :root{
+    --bg:#f7f9fc;
+      --card:#ffffff;
+      --accent:#2563eb;
+      --muted:#64748b;
+      --me:#1f2937
+}
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
+    body{background:var(--bg);min-height:100vh;margin:0;display:flex;align-items:top-center;justify-content:center;padding:14px;color:#111827}
+
+body.dark {
+  background:#070d1a;
+  --bg:#070d1a;
+  --card:#0d1526;
+  --text:#e6eef8;
+  --muted:#94a3b8;
+}
+
+body.dark .chat {
+  background:#0d1526 !important;
+  color:#e6eef8 !important;
+}
+
+body.dark .input {
+  background:#0f1a2b !important;
+  border-color:#1e2a40 !important;
+  color:#e6eef8 !important;
+}
+
+body.dark h1 {
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+    #quiz-overlay{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(2px);
+      z-index: 9999;
+    }
+
+    #quiz-popup{
+      background: white;
+      padding: 20px;
+      width: 90%;
+      max-width: 380px;
+      border-radius: 14px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+      animation: popupShow .25s ease;
+    }
+
+    .quiz-option{
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      text-align: left;
+      background: #f9fafb;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    body.dark #quiz-popup{
+  background: #1e1e1e;
+  color: #f1f1f1;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+}
+
+    body.dark .quiz-option{ background: #142435; border-color: #23364a; color: var(--text); }
+   
+   .quiz-option:hover{ background:#f3f4f6; }
+
+    #quiz-result{ margin-top: 10px; font-weight: bold; }
+
+    #quiz-close{
+      background:#2563eb;color:white;border:none;border-radius:8px;margin-top:14px;padding:10px;width:100%;cursor:pointer;
+    }
+
+
+
+    @keyframes popupShow{ from{opacity:0; transform:scale(.9);} to{opacity:1; transform:scale(1);} }
+
+    .container{
+      width:960px;max-width:96%;
+      background:#ffffff;border-radius:14px;
+      box-shadow:0 8px 24px rgba(0,0,0,0.08);
+      overflow:visible;
+      display:grid;grid-template-columns:360px 1fr;
+      min-height:540px;
+    }
+
+    .submit-button {
+      background: #12e049;color:white;padding:10px 15px;border-radius:10px;margin-top:10px;cursor:pointer;
+      display:flex;justify-content:center;align-items:center;width:100%;box-sizing:border-box;
+    }
+    .submit-button:hover { background:#12e049; }
+
+    .quiz-option.correct { background-color:#4caf50 !important; color:white !important; }
+    .quiz-option.wrong { background-color:#f44336 !important; color:white !important; }
+
+    select.correct { background-color:#4caf50 !important; color:white !important; border-color:#39843b !important; }
+    select.wrong { background-color:#f44336 !important; color:white !important; border-color:#a12822 !important; }
+
+    .panel{ background:var(--card); padding:20px; border-right:1px solid #e5e7eb; overflow-y:auto; }
+    body.dark .panel{ border-right:1px solid rgba(255,255,255,0.03); }
+    .brand{display:flex;gap:12px;align-items:center;margin-bottom:18px}
+    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#60a5fa);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}
+    h1{font-size:16px;margin:0;color:#111827}
+    p.lead{margin:6px 0 14px;color:var(--muted);font-size:13px}
+    .quick{display:flex;flex-direction:column;gap:8px}
+    .suggest{background:#f9fafb;border:1px solid #e5e7eb;padding:8px;border-radius:8px;color:#374151;cursor:pointer;font-size:13px;text-align:left}
+    .suggest:hover{background:#f3f4f6}
+    body.dark .suggest{ background:#0b1a2a; border-color:#133045; color:var(--text); }
+    .controls{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
+    .btn{background:#f9fafb;border:1px solid #e5e7eb;padding:8px 10px;border-radius:8px;color:#374151;cursor:pointer;font-size:13px}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),#60a5fa);color:#fff;border:none}
+    body.dark .btn{ background:#0b1a2a; border-color:#163045; color:var(--text); }
+
+    .chat{padding:20px;display:flex;flex-direction:column;gap:12px;background:#fafafa;overflow:visible; min-height:540px;}
+    body.dark .chat{ background:transparent; }
+    .meta{display:flex;align-items:center;justify-content:space-between}
+    .meta h2{margin:0;font-size:14px;color:#111827}
+    .meta small{color:var(--muted)}
+    .messages{ flex:1; overflow-y:auto; padding-right:8px; display:flex; flex-direction:column; gap:12px; max-height:calc(100vh - 220px); }
+    .msg{display:flex;gap:10px;align-items:flex-end}
+    .msg.me{flex-direction:row-reverse}
+    .avatar{width:36px;height:36px;border-radius:10px;background:#e5e7eb;display:flex;align-items:center;justify-content:center;color:#374151;font-weight:600}
+    body.dark .avatar{ background:#122234; color:var(--text); }
+    .bubble{max-width:70%;padding:10px 12px;border-radius:12px;background:#f3f4f6;color:#111827;font-size:14px;line-height:1.35}
+    .msg.me .bubble{background:linear-gradient(90deg,#2563eb,#60a5fa);color:#fff}
+    body.dark .bubble{ background:#123043; color:var(--text); }
+    body.dark .msg.me .bubble{ background:linear-gradient(90deg,#2563eb,#60a5fa); color:#fff; }
+
+    .timestamp{font-size:11px;color:var(--muted);margin-top:6px}
+
+    .composer{display:flex;gap:10px;align-items:center;padding-top:8px;border-top:1px solid #e5e7eb}
+    body.dark .composer{ border-top-color: rgba(255,255,255,0.03); }
+    .input{ flex:1; background:#fff;border:1px solid #e5e7eb;padding:10px 12px;border-radius:10px;color:#111827;min-height:44px;resize:none;font-size:14px;overflow:hidden }
+    .send{padding:10px 14px;border-radius:10px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:14px}
+    .typing{display:inline-block;font-style:italic;color:var(--muted)}
+    .footer{font-size:12px;color:var(--muted);text-align:center;padding:10px}
+
+#result-screen{
+      position:fixed; inset:0; background:rgba(0,0,0,0.4); display:none; z-index:9998;
+      align-items:center; justify-content:center; padding:18px;
+    }
+    #result-box{
+      width:100%; max-width:760px; background:var(--card); border-radius:12px; padding:18px; box-shadow:0 10px 40px rgba(0,0,0,0.25); color:var(--text);
+      display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start;
+    }
+    #result-left{ flex:1 1 320px; display:flex; flex-direction:column; align-items:center; gap:12px; padding:6px; }
+    #cert-preview{ width:100%; max-width:360px; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.08); background:white; padding:8px; display:flex; justify-content:center; align-items:center; }
+    body.dark #cert-preview{ background:#071a2a; box-shadow:none; }
+    #cert-preview img{ width:100%; height:auto; max-height:280px; object-fit:contain; border-radius:6px; display:block; }
+
+    #result-right{ flex:1 1 300px; display:flex; flex-direction:column; gap:10px; min-width:220px;}
+    .result-title{ font-size:18px; font-weight:700; margin:0; }
+    .result-sub{ color:var(--muted); font-size:14px; margin:0; }
+
+    .action-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .primary-btn{ padding:10px 14px; background:var(--accent); color:white; border:none; border-radius:8px; cursor:pointer; }
+    .secondary-btn{ padding:10px 14px; background:transparent; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer; }
+    body.dark .secondary-btn{ border-color: rgba(255,255,255,0.06); color:var(--text); }
+
+    /* certificate page (full) */
+    #certificatePage{
+      display:none; padding:20px; position:fixed; inset:0; background:var(--bg); z-index:99999; overflow-y:auto;
+    }
+    #certificateCard{ max-width:820px; margin:40px auto; background:var(--card); padding:25px; border-radius:14px; box-shadow:0 4px 20px rgba(0,0,0,0.15); text-align:center; color:var(--text); }
+    #certificateCard img{ width:100%; max-width:640px; border-radius:8px; border:4px solid #c9a451; display:block; margin:0 auto 18px; }
+
+    /* camera container inside result box when used */
+    #cameraContainer{ display:none; flex-direction:column; align-items:center; gap:8px; }
+    #camera{ width:260px; border-radius:8px; background:#000; }
+    #cameraCountdown{ font-size:40px; color:red; margin-top:10px; display:none; }
+
+    @media (max-width:820px){
+      .container{grid-template-columns:1fr; min-height:100vh;}
+      .panel{order:2;border-right:none;border-top:1px solid #e5e7eb;max-height:200px;}
+      .chat{order:1;flex:1;min-height:calc(100vh - 220px);padding:14px}
+      .input{min-height:50px;font-size:15px}
+      .send{padding:12px 16px;font-size:15px}
+      .messages{max-height:calc(100vh - 220px);}
+      #result-box{ flex-direction:column; align-items:center; max-width:100%; }
+      #cert-preview{ max-width:340px; }
+      #camera{ width:100%; max-width:420px; }
+    }
+
+#scrollBottomBtn {
+  position: absolute;
+  bottom: 85px;
+  right: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  font-size: 20px;
+  background: #4f46e5;
+  color: white;
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+  display: none;
+  z-index: 20;
+}
+
+/* dark mode */
+body.dark #scrollBottomBtn{
+  background: #6366f1;
+}
+
+/* mobile */
+@media (max-width: 480px) {
+  #scrollBottomBtn {
+    bottom: 70px;
+    right: 10px;
+  }
+}
+
+/* biar scroll halus di mobile */
+#messages{
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+  </style>
+</head>
+<body>
+  <!-- LOGIN -->
+  <div id="login-screen" style="position:fixed; inset:0; background:#f7f9fc; display:flex; align-items:center; justify-content:center;">
+    <form id="login-form" style="background:white; padding:24px 32px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.08); width:320px;">
+      <h2 style="margin-bottom:16px; text-align:center;">Masuk ke Chatbot</h2>
+      <label>Masukkan Nama Anda:</label>
+      <input type="text" id="username" placeholder="contoh: Adhys" required
+        style="width:100%; padding:8px; margin:10px 0 16px; border:1px solid #ddd; border-radius:8px;">
+      <button type="submit" style="width:100%; background:#2563eb; color:white; padding:10px; border:none; border-radius:8px; cursor:pointer;">
+        Masuk
+      </button>
+    </form>
+  </div>
+
+  <!-- CHAT AREA (MAIN) -->
+  <div class="container" id="chatContainer" role="application" aria-label="Chatbot sederhana" style="display:none;">
+    <aside class="panel">
+      <div class="brand">
+        <div class="logo">CB</div>
+        <div>
+          <h1>Siswa-siswi XII-3</h1>
+          <p class="lead">Chatbot seputar kelas XII-3</p>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="font-size:13px;margin:0 0 8px 0;color:var(--muted)">Contoh pertanyaan</h3>
+        <div class="quick">
+          <button class="suggest" data-msg="Halo">Halo</button>
+          <button class="suggest" data-msg="Siapa namamu?">Siapa namamu?</button>
+          <button class="suggest" data-msg="Apa saja fiturmu?">Apa saja fiturmu?</button>
+          <button class="suggest" data-msg="Siswa-siswi kelas XII-3">Siswa-siswi kelas XII-3?</button>
+          <button class="suggest" data-msg="1">Nomer absen</button> 
+          <button class="suggest" data-msg="adhys">Cari siswa 'nama'</button>
+          <button class="suggest" data-msg="@adhys: ">Kirim pesan ke siswa(@nama siswa/nomer absen)</button>
+          <button class="suggest" data-msg="struktur kelas">Struktur kelas</button>
+          <button class="suggest" data-msg="Guru mata pelajaran">Guru Mapel</button>
+          <button class="suggest" data-msg="Jadwal piket">Jadwal Piket Kelas</button>
+          <button onclick="startQuiz()" id="quizButton">Main Quiz</button>
+        </div>
+
+        <div class="controls">
+          <button id="clear" class="btn">Bersihkan</button>
+          <button id="download" class="btn">Simpan chat</button>
+          <button id="toggleDelay" class="btn">Delay: On</button>
+          <button id="openCertificateBtn" class="btn">Lihat Sertifikat Quiz</button>
+          <button id="toggleDarkMode" class="btn">Dark Mode: Off</button>
+          
+        </div>
+
+        <div id="login-info" style="margin-top:16px; font-size:13px; color:var(--muted)">
+          <p>Sedang login sebagai: <strong id="loggedUser"></strong></p>
+          <button id="logout" class="btn" style="margin-top:6px;">Logout</button>
+        </div>
+
+        <div style="margin-top:18px;color:var(--muted);font-size:13px">
+          TIPS: tekan <strong>Enter</strong> untuk mengirim, jika akan berganti pengguna sebaiknya chat dibersihkan dengan tekan <strong>bersihkan</strong>.
+        </div>
+      </div>
+    </aside>
+
+    <main class="chat">
+      <div class="meta">
+        <h2>Obrolan</h2>
+        <small id="status">Siap</small>
+      </div>
+
+      <div class="messages" id="messages" aria-live="polite"></div>
+      
+      <button id="scrollBottomBtn" aria-label="Scroll ke bawah">⬇</button>
+
+      <div class="composer">
+        <textarea id="input" class="input" placeholder="Ketik pesan..." rows="1" aria-label="Pesan"></textarea>
+        <button id="send" class="send">Kirim</button>
+      </div>
+
+      <div class="footer">Created by AMW • dibuat dengan HTML, CSS, dan JavaScript</div>
+    </main>
+  </div>
+
+ <!-- RESULT SCREEN (dengan preview sertifikat + aksi) -->
+  <div id="result-screen" aria-hidden="true">
+    <div id="result-box" role="dialog" aria-modal="true">
+      <div id="result-left">
+        <div style="text-align:center;">
+          <h3 class="result-title">Hasil Quiz Kamu</h3>
+          <p class="result-sub" id="result-score">Nilai: --</p>
+        </div>
+
+        <div id="cert-preview" aria-hidden="false">
+          <img id="certPreviewImg" alt="Preview Sertifikat">
+        </div>
+
+        <!-- camera area (hidden until needed) -->
+        <div id="cameraContainer">
+          <video id="camera" autoplay playsinline></video>
+          <canvas id="snapshot" width="260" height="200" style="display:none;"></canvas>
+          <div id="cameraCountdown">3</div>
+        </div>
+
+        <div style="width:100%; display:flex; justify-content:center;">
+          <div class="action-row">
+            <button id="viewCertificateBtn" class="primary-btn">Lihat Sertifikat</button>
+            <button id="takePhotoBtn" class="secondary-btn">Ambil Foto Sertifikat</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="result-right">
+        <div>
+          <h4 style="margin:0">Ringkasan</h4>
+          <p style="margin:6px 0 0;" id="result-detail">—</p>
+        </div>
+
+        <div>
+          <h4 style="margin:0">Aksi</h4>
+          <div class="action-row" style="margin-top:8px;">
+            <button id="downloadCertificateBtn_small" class="secondary-btn">Download Sertifikat</button>
+            <button id="returnToChatBtn" class="secondary-btn">Kembali ke Chat</button>
+          </div>
+        </div>
+
+        <div style="margin-top:auto; color:var(--muted); font-size:13px;">
+          <strong>Catatan:</strong> Kamera hanya muncul jika kamu pilih "Ambil Foto Sertifikat". Preview akan menyesuaikan ukuran layar (responsif).
+        </div>
+      </div>
+    </div>
+  </div>
+  
+<!-- HALAMAN SERTIFIKAT -->
+ <div id="certificatePage">
+  <div id="certificateCard">
+    <h2 style="font-family:serif; font-size:26px; margin-bottom:10px; color:var(--text)">SERTIFIKAT QUIZ</h2>
+    <hr style="width:120px; border:3px solid #c9a451; margin:10px auto 18px auto; border-radius:4px;">
+    <img id="certificateImage" alt="Sertifikat">
+    <div style="margin-top:14px;">
+      <button id="updatePhotoBtn" class="btn">Ambil / Perbarui Foto Sertifikat</button>
+      <button id="downloadCertificateBtn" class="primary-btn" style="margin-right:8px;">Download Sertifikat</button>
+      <button id="returnToMenuBtn" class="secondary-btn">Kembali ke Chat</button>
+    </div>
+  </div>
+ </div>
+
+  <!-- QUIZ POPUP (overlay modal) -->
+  <div id="quiz-overlay">
+    <div id="quiz-popup">
+      <h3 id="quiz-question">Pertanyaan</h3>
+      <div id="quiz-options"></div>
+      <button id="quiz-close" class="primary-btn" style="margin-top:10px;">Tutup</button>
+    </div>
+  </div>
+
+  <div id="quiz-result" style="margin-top:20px; display:none;"></div>
+
+  <script>
+    // ---------- GLOBAL ELEMENTS ----------
+    const loginForm = document.getElementById('login-form');
+    const loginScreen = document.getElementById('login-screen');
+    const chatContainer = document.getElementById('chatContainer');
+    const messagesEl = document.getElementById('messages');
+    const inputEl = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
+    const clearBtn = document.getElementById('clear');
+    const downloadBtn = document.getElementById('download');
+    const toggleDelayBtn = document.getElementById('toggleDelay');
+    const statusEl = document.getElementById('status');
+    const loggedUserEl = document.getElementById('loggedUser');
+    const logoutBtn = document.getElementById('logout');
+    const loginInfo = document.getElementById('login-info');
+
+    const resultScreen = document.getElementById('result-screen');
+    const certPreviewImg = document.getElementById('certPreviewImg');
+    const resultScoreEl = document.getElementById('result-score');
+    const resultDetailEl = document.getElementById('result-detail');
+    const viewCertificateBtn = document.getElementById('viewCertificateBtn');
+    const takePhotoBtn = document.getElementById('takePhotoBtn');
+    const downloadCertificateBtn = document.getElementById('downloadCertificateBtn');
+    const downloadCertificateBtn_small = document.getElementById('downloadCertificateBtn_small');
+    const returnToMenuBtn = document.getElementById('returnToMenuBtn');
+    const returnToChatBtn = document.getElementById('returnToChatBtn');
+    const cameraContainer = document.getElementById('cameraContainer');
+    const cameraVideo = document.getElementById('camera');
+    const cameraCountdownEl = document.getElementById('cameraCountdown');
+    const snapshotCanvas = document.getElementById('snapshot');
+
+    const certificatePage = document.getElementById('certificatePage');
+    const certificateImage = document.getElementById('certificateImage');
+
+    const openCameraPanelBtn = document.getElementById('openCameraPanelBtn');
+    const toggleDarkBtn = document.getElementById('toggleDarkMode');
+    const scrollBottomBtn = document.getElementById("scrollBottomBtn");
+
+    // quiz overlay elements
+    const quizOverlay = document.getElementById('quiz-overlay');
+    const quizQuestion = document.getElementById('quiz-question');
+    const quizOptions = document.getElementById('quiz-options');
+    const quizResult = document.getElementById('quiz-result');
+    const quizClose = document.getElementById('quiz-close');
+
+    // small state
+    let cameraMode = "quiz";
+    let simulateDelay = true;
+    const STORAGE_KEY = 'chatbot_demo_history_v1';
+    let currentStream = null;
+    let currentScore = 0;
+
+    // === LOGIN FLOW ===
+    const savedUser = localStorage.getItem('username');
+    if (savedUser) {
+      loginScreen.style.display = 'none';
+      chatContainer.style.display = 'grid';
+      loggedUserEl.textContent = savedUser;
+      loginInfo.style.display = 'block';
+    } else {
+      chatContainer.style.display = 'none';
+      loginScreen.style.display = 'flex';
+    }
+
+    loginForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      const user = document.getElementById('username').value.trim();
+      if(user){
+        localStorage.setItem('username', user);
+        loginScreen.style.display = 'none';
+        chatContainer.style.display = 'grid';
+        loggedUserEl.textContent = user;
+        loginInfo.style.display = 'block';
+        inputEl.focus();
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      if (confirm('Yakin ingin logout?')) {
+        localStorage.removeItem('username');
+        localStorage.removeItem(STORAGE_KEY);
+        messagesEl.innerHTML = '';
+        loginScreen.style.display = 'flex';
+        chatContainer.style.display = 'none';
+        document.getElementById('username').value = '';
+        loginInfo.style.display = 'none';
+      }
+    });
+
+    // ---------- DATA SISWA (tetap seperti semula) ----------
+    const siswaList = [ /* data siswa (dipertahankan) */
+      {id: 1, nama: "ADHYS MUHAMMAD YUSUF", Info: "Absen 01", Tanggal_lahir: "18 November 2007", foto: "https://imgur.com/CjqyRd8.jpeg", extra: {Amoureuse: "mon amour"}, fotopasangan: "https://i.imgur.com/CNmascj.jpeg" },
+      {id: 2, nama: "ALFINA RIZKA FADYA", Info: "Absen 02", Tanggal_lahir: "21 Desember 2007", foto: "https://i.imgur.com/92pJhV4.jpeg",},
+      {id: 3, nama: "ALIEF ROHMADONA", Info: "Absen 03", Tanggal_lahir: "21 Agustus 2008", foto: "https://imgur.com/gSVs66V.jpeg", },
+      {id: 4, nama: "ANASYA YASINTA", Info: "Absen 04", Tanggal_lahir: "17 Mei 2007", foto: "https://i.imgur.com/EmeoUo9.jpeg",},
+      {id: 5, nama: "ANGGIE RAHMA DEWI ANJANI", Info: "Absen 05", Tanggal_lahir: "31 Mei 2007", foto: "https://imgur.com/QiAUFnc.jpeg",  },
+      {id: 6, nama: "BELLA AGUSTIN", Info: "Absen 06", Tanggal_lahir: "18 Agustus 2008", foto: "https://imgur.com/I9l2SGS.jpeg",  },
+      {id: 7, nama: "BELLA MUTIARA HIKMAH", Info: "Absen 07", Tanggal_lahir:"22 Desember 2008", foto: "https://imgur.com/bsLfLH2.jpeg",  },
+      {id: 8, nama: "BILBINA SALWA LAILLIAH", Info: "Absen 08", Tanggal_lahir: "11 Oktober 2007", foto: "https://imgur.com/MV8K8Wu.jpeg",  },
+      {id: 9, nama: "DANDI KHAFID PUTRA PRATAMA", Info: "Absen 09", Tanggal_lahir: "19 Agustus 2008", foto: "https://imgur.com/cM4UU3W.jpeg", extra: {gelar: "Wibu Maksimal"} },
+      {id: 10, nama: "DAVINA YULIA SHERLY", Info: "Absen 10", Tanggal_lahir: "12 Juli 2008", foto: "https://i.imgur.com/8SfhOKU.jpeg",  },
+      {id: 11, nama: "DISKA ADELIA DESWITA", Info: "Absen 11", foto: "https://i.imgur.com/sFRNZc4.jpeg", Tanggal_lahir: "29 Desember 2007",  },
+      {id: 12, nama: "DYAH AYU ANISAH KHUDZAIFAH", Info: "Absen 12", Tanggal_lahir: "5 September 2007", foto: "https://i.imgur.com/PGq7HcO.jpeg",  },
+      {id: 13, nama: "FIRSA FEBRIYANTI", Info: "Absen 13", Tanggal_lahir: "27 Mei 2008", foto: "https://i.imgur.com/K69ToTG.jpeg",  },
+      {id: 14, nama: "FITRI AINI ZAKIYAH", Info: "Absen 14", Tanggal_lahir: "14 Oktober 2007", foto: "https://imgur.com/n4U515f.jpeg",  },
+      {id: 15, nama: "FRESILIA EKA PUTRI FIANSYA", Info: "Absen 15", Tanggal_lahir: "7 Februari 2008", foto: "https://imgur.com/h39TnhZ.jpeg",  },
+      {id: 16, nama: "HAFSAH", Info: "Absen 16", Tanggal_lahir: "26 Juli 2007", foto: "https://imgur.com/VWyTQTm.jpeg",  },
+      {id: 17, nama: "HULULUN AHNAF FITRIA", Info: "Absen 17", Tanggal_lahir: "17 Oktober 2007", foto: "https://imgur.com/g5g8OIq.jpeg",  },
+      {id: 18, nama: "IMMANUEL SELKA ADISUCIPTO", Info: "Absen 18", Tanggal_lahir: "16 Februari 2008", foto: "https://i.imgur.com/Lnj4AAL.jpeg", extra: { gelar: "Wibu Maksimal 2"} },
+      {id: 19, nama: "ISA SANJAYA", Info: "Absen 19", Tanggal_lahir: "14 Juli 2007", foto: "https://imgur.com/HzMoDw9.jpeg", extra: { gelar: "King Madura"} },
+      {id: 20, nama: "KANIYA AZZUHRAH KAMIL", Info: "Absen 20", Tanggal_lahir: "22 Desember 2007", foto: "https://i.imgur.com/gf1RETu.jpeg",  },
+      {id: 21, nama: "KHARISMALYA MAR'ATUS SHOLICHAH", Info: "Absen 21", Tanggal_lahir: "29 November 2007", foto: "https://imgur.com/NscOkfp.jpeg",  },
+      {id: 22, nama: "M. HAIKAL FIKRI", Info: "Absen 22", Tanggal_lahir: "28 November 2007", foto: "https://i.imgur.com/bzcjiYo.jpeg",  },
+      {id: 23, nama: "MARCHA LIFIANTY ADYATNA", Info: "Absen 23", Tanggal_lahir: "5 Maret 2008", foto: "https://imgur.com/Oj3cYHY.jpeg",  },
+      {id: 24, nama: "MOH. TEGAR MAULANA", Info: "Absen 24", Tanggal_lahir: "29 Desember 2007", foto: "https://i.imgur.com/YbkuwFt.jpeg", extra: { gelar: "Sarjana remi " } },
+      {id: 25, nama: "MUHAMMAD EKA ALFARIZQI", Info: "Absen 25", Tanggal_lahir: "5 Oktober 2007", foto: "https://i.imgur.com/s6YJcny.jpeg", extra: { hobi: "Tidur"} },
+      {id: 26, nama: "MUHAMMAD INSANUL MUFID", Info: "Absen 26", Tanggal_lahir: "20 April 2008", foto: "https://i.imgur.com/hz4Jqtj.jpeg", extra: { gelar: "Peminat KingS MU"} },
+      {id: 27, nama: "MUHAMMAD RIVAL ADI PRATAMA", Info: "Absen 27", Tanggal_lahir: "29 April 2008", foto: "https://imgur.com/5phPQmb.jpeg", extra: { gelar: "Jagal"} },
+      {id: 28, nama: "NATHANIELLA PUTRI ARIFIN", Info: "Absen 28", Tanggal_lahir: "24 Januari 2008", foto: "https://i.imgur.com/B65ELDX.jpeg",  },
+      {id: 29, nama: "NIKEN AULYA TRIWULANDARI", Info: "Absen 29", Tanggal_lahir: "6 Oktober 2007", foto: "https://imgur.com/k9BtXtx.jpeg",  },
+      {id: 30, nama: "RAHMA HAYYU FAIQOH", Info: "Absen 30", Tanggal_lahir: "4 Januari 2008", foto: "https://imgur.com/c065Ipo.jpeg",  },
+      {id: 31, nama: "RAISAH CHARLIZ MAHERUNNISA", Info: "Absen 31", Tanggal_lahir: "28 Februari 2008", foto: "https://i.imgur.com/jCMQwKo.jpeg",  },
+      {id: 32, nama: "RYAN WAHYU SAPUTRA", Info: "Absen 32", Tanggal_lahir: "27 Juni 2007", foto: "https://imgur.com/XtYq9OW.jpeg", extra: { gelar: "Jumbo"} },
+      {id: 33, nama: "SABRINA GALIH PRAMESWARI", Info: "Absen 33", Tanggal_lahir: "20 Februari 2008", foto: "https://imgur.com/3hbX22l.jpeg",  },
+      {id: 34, nama: "WEMPI ALWI MUDZAKAR", Info: "Absen 34", Tanggal_lahir: "20 September 2007", foto: "https://imgur.com/Y0bIq7w.jpeg", extra: { gelar: "Wong Guabut"} },
+      {id: 35, nama: "ZAKIA EKA PRAVITA", Info: "Absen 35", Tanggal_lahir: "22 April 2008", foto: "https://imgur.com/zjzekxA.jpeg"},
+      {id: 36, nama: "ZUNI WULANDARI", Info: "Absen 36", Tanggal_lahir: "16 Juni 2007", foto: "https://imgur.com/cJgMcod.jpeg",  },
+      // ... bisa ditambah lagi
+    ];
+
+    // tambahkan pesanMasuk property
+    siswaList.forEach(s => s.pesanMasuk = []);
+
+    // struktur kelas & guru (dipertahankan dari file asli)
+    const strukturKelas = { wali: { nama: "NUR FADILLAH, S.Pd", foto: "https://i.imgur.com/YPMJsLk.jpeg" }, ketua: "MOH. TEGAR MAULANA", wakil: "M. HAIKAL FIKRI", sekretaris_1: "FITRI AINI ZAKIYAH", sekretaris_2: "MARCHA LIFIANTY ADYATNA", bendahara_1: "NATHANIELLA PUTRI ARIFIN", bendahara_2: "BILBINA SALWA LAILLIAH" };
+    const guruMapel = { bahasa_indonesia: { nama: "NUR YAYUK F, S.Pd, M.Pd", foto: "https://i.imgur.com/ShY1UOK.jpeg" }, bahasa_inggris: { nama: "NUR FADILAH, S.Pd", foto: "https://i.imgur.com/YPMJsLk.jpeg" }, matematika_wajib: { nama: "Dra. ERNAENI TRI UTAMI", foto: "https://i.imgur.com/0Cnke9x.jpeg" }, biologi: { nama: "AFIFATUR ROHMAH, S.Pd", foto: "https://i.imgur.com/dBBSiWZ.jpeg" }, bahasa_jawa: { nama: "NISFULLAILA AL M, S.Pd", foto: "https://i.imgur.com/XO9rk21.jpeg" }, informatika: { nama: "AFIF MUHAIMIN, S.Pd", foto: "https://i.imgur.com/lbxpAJW.jpeg" }, matematika_lanjut: { nama: "PUSPITONO, M.Pd", foto: "https://i.imgur.com/jgZkmqx.jpeg" }, bahasa_prancis: { nama: "ARI KUSMIYATI, S.Pd", foto: "https://i.imgur.com/qMK7VAz.jpeg" }, sejarah: { nama: "RIFKI FEBRIYAN I R, S.Pd", foto: "https://i.imgur.com/sFHSRrC.jpeg" }, PAI: { nama: "DIAN AYU M, S.Pd", foto: "https://i.imgur.com/cpdtC8R.jpeg" }, PPKN: { nama: "Drs. SETIYO EDI, S.Pd", foto: "https://imgur.com/Sdz972K.jpeg" }, seni_budaya: { nama: "IMAM NAWAWI, S.Pd", foto: "https://imgur.com/BzptY9l.jpeg" }, penjaskes: { nama: "NILA RETNO CAHYANI, S.Pd", foto: "https://i.imgur.com/ZAgdC14.jpeg" } };
+
+    const jadwalPiket = {
+      Senin: ["FRESILIA EKA PUTRI FIANSYA", "DAVINA YULIA SHERLY", "ANGGIE RAHMA DEWI ANJANI", "ZAKIA EKA PRAVITA","KHARISMALYA MAR'ATUS SHOLICHAH","ADHYS MUHAMMAD YUSUF","IMMANUEL SELKA ADISUCIPTO"],
+      Selasa: ["NATHANIELLA PUTRI ARIFIN", "ALFINA RIZKA FADYA", "FITRI AINI ZAKIYAH", "FIRSA FEBRIYANTI", "ANASYA YASINTA", "ISA SANJAYA","M. HAIKAL FIKRI"],
+      Rabu: ["MARCHA LIFIANTY ADYATNA", "ZUNI WULANDARI", "RAISAH CHARLIZ MAHERUNNISA", "BELLA MUTIARA HIKMAH", "DISKA ADELIA DESWITA", "MUHAMMAD EKA ALFARIZQI", "MUHAMMAD INSANUL MUFID", "MOH. TEGAR MAULANA"],
+      Kamis: ["RAHMA HAYYU FAIQOH", "HULULUN AHNAF FITRIA", "NIKEN AULYA TRIWULANDARI", "HAFSAH", "BELLA AGUSTIN", "MUHAMMAD RIVAL ADI PRATAMA", "RYAN WAHYU SAPUTRA"],
+      Jumat: ["ALIEF ROHMADONA", "DYAH AYU ANISAH KHUDZAIFAH", "BILBINA SALWA LAILLIAH", "KANIYA AZZUHRAH KAMIL","SABRINA GALIH PRAMESWARI", "WEMPI ALWI MUDZAKAR", "DANDI KHAFID PUTRA PRATAMA"]
+    };
+
+    // ---------- BOT LOGIC (dipertahankan) ----------
+    function botReply(text){
+      const t = text.toLowerCase().trim();
+
+      // pesan ke siswa (@nama: pesan)
+      if (t.startsWith('@')) {
+        const parts = t.slice(1).split(':');
+        if (parts.length < 2) return 'Format salah. Gunakan @nama: pesan';
+        const targetName = parts[0].trim().toLowerCase();
+        const pesan = parts.slice(1).join(':').trim();
+        const siswa = siswaList.find(s => s.nama.toLowerCase().includes(targetName) || s.id == targetName);
+        if (!siswa) return 'Siswa tidak ditemukan.';
+        siswa.pesanMasuk.push({ dari: localStorage.getItem('username') || "Guru / Bot", isi: pesan, waktu: new Date().toLocaleString() });
+        return `Pesan terkirim ke <strong>${siswa.nama}</strong>: "${pesan}"`;
+      }
+
+     if (/^(murid|siswa|siswa-siswi|daftar siswa)(.*)?$/i.test(t)) {
+    return "Berikut daftar siswa kelas XII-3:<ul>" + 
+      siswaList.map(s => `<li>${s.id}. ${s.nama}</li>`).join('') + 
+      "</ul>";
+      }
+
+      const nomor = parseInt(t);
+      if (!isNaN(nomor)) {
+        const sId = siswaList.find(s => s.id === nomor);
+        if (sId) {
+          let extraInfo = "";
+          if (sId.extra) {
+            for (const [key, value] of Object.entries(sId.extra)) extraInfo += `<li>${key}: ${value}</li>`;
+          }
+          let pesanList = "";
+          if (sId.pesanMasuk && sId.pesanMasuk.length > 0) {
+            pesanList = "<h4>Pesan untuk siswa ini:</h4><ul>" + sId.pesanMasuk.map((p, i) => `<li><strong>${p.dari}</strong>: ${p.isi} <br><small>${p.waktu}</small><br><button onclick="hapusPesan('${sId.nama}', ${i})" style="margin-top:4px;font-size:12px;color:#fff;background:#dc2626;border:none;border-radius:6px;padding:4px 8px;cursor:pointer;">Hapus</button></li>`).join("") + "</ul>";
+          } else { pesanList = "<p><em>Belum ada pesan untuk siswa ini.</em></p>"; }
+          return `<ul><li>Nama: <strong>${sId.nama}</strong></li><li>Info: ${sId.Info || '-'}</li><li>Tanggal lahir: ${sId.Tanggal_lahir || '-'}</li>${extraInfo}</ul>${pesanList}`;
+        } else { return "Maaf, siswa dengan nomor tersebut tidak ditemukan."; }
+      }
+
+      const sNama = siswaList.find(s => s.nama.toLowerCase().trim().includes(t));
+      if (sNama) {
+        let extraInfo = "";
+        if (sNama.extra) for (const [key, value] of Object.entries(sNama.extra)) extraInfo += `<li>${key}: ${value}</li>`;
+        let pesanList = "";
+        if (sNama.pesanMasuk && sNama.pesanMasuk.length > 0) {
+          pesanList = "<h4>Pesan untuk siswa ini:</h4><ul>" + sNama.pesanMasuk.map((p, i) => `<li><strong>${p.dari}</strong>: ${p.isi} <br><small>${p.waktu}</small><br><button onclick="hapusPesan('${sNama.nama}', ${i})" style="margin-top:4px;font-size:12px;color:#fff;background:#dc2626;border:none;border-radius:6px;padding:4px 8px;cursor:pointer;">Hapus</button></li>`).join("") + "</ul>";
+        } else { pesanList = "<p><em>Belum ada pesan untuk siswa ini.</em></p>"; }
+        return `<ul><li>Nama: <strong>${sNama.nama}</strong></li><li>Info: ${sNama.Info}</li><li>Tanggal lahir: ${sNama.Tanggal_lahir}</li>${extraInfo}</ul>${pesanList}`;
+      }
+
+	// CARI BERDASARKAN KATA KUNCI
+const sFoto = siswaList.filter(s => s.extra && s.extra.Amoureuse && s.extra.Amoureuse.toLowerCase() === t);if(sFoto.length > 0){
+  return sFoto.map(s =>
+    `<strong>${s.nama}</strong><br>
+     <img src="${s.fotopasangan}" alt="${s.nama} - foto tambahan" style="max-width:100%;border-radius:12px;">`
+  ).join('<br><br>');
+}
+
+
+      // kata-kata lain (struktur, guru, jadwal, dsb)
+      if(/^(halo|hi|hai|hello)\b/.test(t)) return 'Halo juga! Mau lihat data siswa tertentu? Coba ketik namanya.';
+      if(/nama( mu| kamu|nya)?/.test(t)) return 'Saya Cosphatre bot bertugas untuk menunjukkan hal seputar kelas XII-3. :)';
+      if(/fitur|apa saja fitur/.test(t)) return 'Saya bisa menampilkan list siswa-siswi kelas XII-3 (ketik murid/siswa-siswi kelas XII-3), memberi pesan kepada siswa tertentu (ketik @nama/@no absen.), dan melihat biodata siswa (ketik nama/no absen)';
+
+      if (/struktur|pengurus|organisasi kelas/i.test(t)) {
+        let html = `<h4>Struktur Organisasi Kelas XII-3</h4><ul><li><strong>Wali Kelas:</strong> ${strukturKelas.wali.nama}</li><li><strong>Ketua Kelas:</strong> ${strukturKelas.ketua}</li><li><strong>Wakil Ketua:</strong> ${strukturKelas.wakil}</li><li><strong>Sekretaris 1:</strong> ${strukturKelas.sekretaris_1}</li><li><strong>Sekretaris 2:</strong> ${strukturKelas.sekretaris_2}</li><li><strong>Bendahara 1:</strong> ${strukturKelas.bendahara_1}</li><li><strong>Bendahara 2:</strong> ${strukturKelas.bendahara_2}</li></ul>`;
+        return html;
+      }
+
+
+      if (/guru( mata pelajaran)?/i.test(t)) {
+  let daftar = Object.entries(guruMapel)
+    .map(([mapel, data]) => `<li><strong>${mapel.replace(/_/g, " ").toUpperCase()}:</strong> ${data.nama}</li>`)
+    .join("");
+  return `<h4>Daftar Guru Mata Pelajaran</h4><ul>${daftar}</ul>`;
+}
+
+// === Cek guru per mapel (dengan foto) ===
+for (const [mapel, data] of Object.entries(guruMapel)) {
+  const mapelClean = mapel.replace(/_/g, " ").toLowerCase();
+  const words = mapelClean.split(" ");
+
+  let phrases = new Set();
+
+  // frasa lengkap
+  phrases.add(mapelClean);
+
+  // frasa bertingkat
+  for (let i = 0; i < words.length; i++) {
+    for (let j = i; j < words.length; j++) {
+      const phrase = words.slice(i, j + 1).join(" ");
+     if (phrase !== mapelClean) {
+        phrases.add(phrase);
+    }
+  }
+ }
+
+phrases = Array.from(phrases);
+phrases.sort((a, b) => {
+if (a === mapelClean) return -1;
+if (b === mapelClean) return 1;
+const diff = b.split(" ").length - a.split(" ").length;
+if (diff !== 0) return diff;
+ return b.length - a.length;
+  });
+
+  // cek setiap frasa
+  for (const phrase of phrases) {
+    const regex = new RegExp(`(^|[^a-z0-9])${phrase}([^a-z0-9]|$)`, "i");
+
+    if (regex.test(t)) {
+      return `
+        <div style="text-align:center;">
+          <img src="${data.foto}" alt="${data.nama}" width="150" height="180"
+               style="object-fit:cover; margin-bottom:10px; border-radius:12px;">
+          <p>Guru mata pelajaran <strong>${mapelClean}</strong> adalah <strong>${data.nama}</strong>.</p>
+        </div>
+      `;
+    }
+ }
+}  
+
+
+
+if (/guru/i.test(t)) {
+
+  for (const [mapel, data] of Object.entries(guruMapel)) {
+
+    const mapelClean = mapel.replace(/_/g, " ").toLowerCase();
+    const words = mapelClean.split(" ");
+
+    let phrases = new Set();
+    phrases.add(mapelClean);
+
+    // buat frasa bertingkat
+    for (let i = 0; i < words.length; i++) {
+      for (let j = i; j < words.length; j++) {
+        const phrase = words.slice(i, j + 1).join(" ");
+        if (phrase !== mapelClean) phrases.add(phrase);
+      }
+    }
+
+    // urutkan: frasa paling spesifik dulu
+    phrases = Array.from(phrases).sort((a, b) => {
+      if (a === mapelClean) return -1;
+      if (b === mapelClean) return 1;
+
+      const diff = b.split(" ").length - a.split(" ").length;
+      if (diff !== 0) return diff;
+
+      return b.length - a.length;
+    });
+
+    // cek tiap frasa
+    for (const phrase of phrases) {
+      const regex = new RegExp(`(^|[^a-z0-9])${phrase}([^a-z0-9]|$)`, "i");
+
+      if (regex.test(t)) {
+        return `
+          <div style="text-align:center;">
+            <img src="${data.foto}" width="150" height="180"
+                 style="object-fit:cover; margin-bottom:10px; border-radius:12px;">
+            <p>Guru mata pelajaran <strong>${mapelClean}</strong> adalah <strong>${data.nama}</strong>.</p>
+          </div>
+        `;
+      }
+    }
+  }
+
+  // jika user hanya mengetik "guru"
+  if (/^guru( mata pelajaran)?$/.test(t.trim())) {
+    let daftar = Object.entries(guruMapel)
+      .map(([mapel, data]) =>
+        `<li><strong>${mapel.replace(/_/g, " ").toUpperCase()}:</strong> ${data.nama}</li>`
+      )
+      .join("");
+
+    return `<h4>Daftar Guru Mata Pelajaran</h4><ul>${daftar}</ul>`;
+  }
+}
+
+      if (/piket|jadwal.*piket|daftar.*piket/i.test(t)) {
+  let daftar = Object.entries(jadwalPiket)
+    .map(([hari, nama]) =>
+      `<li><strong>${hari}:</strong>
+       <ul>${nama.map(n => `<li>${n}</li>`).join("")}</ul></li>`
+    )
+    .join("");
+
+  return `<h4>Jadwal Piket Kelas XII-3</h4>
+          <ul style="text-align:left;">${daftar}</ul>`;
+}
+      return 'Maaf, saya belum mengerti. Coba tanya dengan kata lain atau minta "fitur".';
+    }
+
+    // ---------- MESSAGING ----------
+    function appendMessage({who='bot', text, ts = Date.now()}){
+      const wrap = document.createElement('div');
+      wrap.className = 'msg ' + (who === 'me' ? 'me' : '');
+
+      const avatar = document.createElement('div');
+      avatar.className = 'avatar';
+      avatar.textContent = who === 'me' ? 'Me' : 'Bot';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.innerHTML = text;
+
+      // Jika pesan bot berisi <strong> nama siswa, tambahkan foto (seperti semula)
+      if(who === 'bot' && text.includes("<strong>") && !text.startsWith("Pesan terkirim ke") && !text.includes("<img")) {
+        const parser = new DOMParser();
+        const html = parser.parseFromString(text, 'text/html');
+        const strong = html.querySelector('strong');
+        if(strong){
+          const nama = strong.textContent;
+          const siswa = siswaList.find(s => s.nama === nama);
+          if(siswa && siswa.foto){
+            const img = document.createElement('img');
+            img.src = siswa.foto;
+            img.style.width = '100%';
+            img.style.borderRadius = '12px';
+            bubble.appendChild(img);
+          }
+        }
+      }
+
+      const time = document.createElement('div');
+      time.className = 'timestamp';
+      time.textContent = new Date(ts).toLocaleTimeString();
+
+      const inner = document.createElement('div');
+      inner.appendChild(bubble);
+      inner.appendChild(time);
+
+      wrap.appendChild(avatar);
+      wrap.appendChild(inner);
+      messagesEl.appendChild(wrap);
+
+      scrollToBottom();
+    }
+
+    async function handleSend(){
+      const text = inputEl.value.trim();
+      if(!text) return;
+      appendMessage({who:'me', text});
+      inputEl.value = '';
+      saveMessage({who:'me', text, ts:Date.now()});
+
+      statusEl.textContent = 'Mengetik...';
+      if(simulateDelay) await wait(500 + Math.random()*900);
+
+      const reply = botReply(text);
+      if(simulateDelay) await wait(400 + Math.random()*800);
+      appendMessage({who:'bot', text:reply});
+      statusEl.textContent = 'Siap';
+      saveMessage({who:'bot', text:reply, ts:Date.now()});
+    }
+
+    function wait(ms){return new Promise(res=>setTimeout(res,ms));}
+    function loadHistory(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return [];
+        const arr = JSON.parse(raw);
+        arr.forEach(msg=>appendMessage(msg));
+        scrollToBottom(true);
+        return arr;
+      }catch(e){console.warn(e);return []}
+    }
+    function saveMessage(msg){
+      const arr = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      arr.push(msg);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    }
+    function clearHistory(){
+      localStorage.removeItem(STORAGE_KEY);
+      messagesEl.innerHTML = '';
+    }
+    function downloadHistory(){
+      const arr = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      let text = arr.map(m=>`[${new Date(m.ts).toLocaleString()}] ${m.who}: ${m.text}`).join('\n');
+      if(!text) text = 'Tidak ada riwayat.';
+      const blob = new Blob([text],{type:'text/plain'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'chat_history.txt';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    // hapus pesan helper (dari data siswa)
+    window.hapusPesan = function(nama, index) {
+      const siswa = siswaList.find(s => s.nama === nama);
+      if (siswa && siswa.pesanMasuk[index]) {
+        if (confirm(`Hapus pesan dari ${siswa.pesanMasuk[index].dari}?`)) {
+          siswa.pesanMasuk.splice(index, 1);
+          appendMessage({ who: 'bot', text: `Pesan dihapus dari data ${nama}.` });
+        }
+      }
+    };
+
+    // ---------- QUIZ (sama dengan konsepmu, sedikit dirapikan) ----------
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    const quizQuestions = [
+      { type: "multiple", question: "Siapa yang sedang login?", options: ["__USERNAME__", "Budi", "Sinta", "Fano"], correct: 0 },
+      { type: "multiple", question: "Hasil penjumlahan 9 + 7 + 10 adalah nomer absen dari?", options: ["Immanuel", "Mufid", "Tegar", "Ryan"], correct: 1 },
+      { type: "multiple", question: "Berikut adalah siswa yang piket di hari senin kecuali...", options: ["Immanuel", "Adhys", "Zakia", "Alya", "Diska"], correct: 4 },
+      { type: "multiple", question: "Siapakah ketua kelas XII-3?", options: ["Mufid", "Immanuel", "Adhys", "Wempi", "Tegar"], correct: 4 },
+      { type: "multiple", question: "Siapakah wali kelas XII-3?", options: ["Afif Muhaimin, M.Pd", "Nur Fadillah, M.Pd", "Drs. Setiyo Edi", "Puspitono, M.Pd"], correct: 1 },
+      { type: "truefalse", question: "Jumlah siswa XII-3 adalah 36 siswa", correct: true },
+      { type: "truefalse", question: "AFIF MUHAIMIN, S.Pd di kelas XII-3 mengajar PAI", correct: false },
+      { type: "multiple-select", question: "Siapa saja yang termasuk dalam struktur pengurus kelas?:", options: ["Haikal", "Mufid", "Tegar", "Fitri", "Alya"], correct: [0,2,3] },
+      { type: "multiple-select", question: "Siapa saja guru yang mengajar di kelas XII-3?:", options: ["Drs. H. AKHMAD ASKURI, M.Pd", "NISFULLAILA AL M, S.Pd",   "NUR FADILAH, S.Pd", "INDAH BAYU NINGSIH, S.Pd", "NUR YAYUK F, S.Pd, M.Pd"], correct: [1,2,4] },
+      { type: "matching", question: "Sesuaikan antara guru pengajar dan mapelnya:", left: ["IMAM NAWAWI, S.Pd", "RIFKI FEBRIYAN I R, S.Pd", "ARI KUSMIYATI, S.Pd", "AFIFATUR ROHMAH, S.Pd", "DIAN AYU M, S.Pd"], right: ["Biologi", "Bahasa Prancis", "Seni Budaya", "Sejarah", "PAI"], correct: { "IMAM NAWAWI, S.Pd":"Seni Budaya", "RIFKI FEBRIYAN I R, S.Pd":"Sejarah", "ARI KUSMIYATI, S.Pd":"Bahasa Prancis", "AFIFATUR ROHMAH, S.Pd":"Biologi", "DIAN AYU M, S.Pd":"PAI" } }
+    ];
+
+    function startQuiz() {
+      currentQuestionIndex = 0; score = 0;
+      const username = localStorage.getItem("username") || "User";
+      quizQuestions[0].options[0] = username;
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const q = quizQuestions[currentQuestionIndex];
+      if (q.type === "multiple") showQuizPopup(q.question, q.options, q.correct);
+      else if (q.type === "truefalse") showTrueFalse(q);
+      else if (q.type === "multiple-select") showMultipleSelect(q);
+      else if (q.type === "matching") showMatching(q);
+    }
+
+    function showQuizPopup(question, options, correctIndex){
+      quizQuestion.textContent = question;
+      quizOptions.innerHTML = ""; quizResult.textContent = "";
+      options.forEach((opt, idx)=>{
+        const btn = document.createElement("button");
+        btn.className = "quiz-option";
+        btn.textContent = opt;
+        btn.onclick = ()=>{
+          document.querySelectorAll(".quiz-option").forEach(b=>b.classList.remove("correct", "wrong"));
+          const isCorrect = idx === correctIndex;
+          if (isCorrect) { btn.classList.add("correct"); quizResult.textContent="Benar!"; quizResult.style.color="green"; score++; }
+          else { btn.classList.add("wrong"); document.querySelectorAll(".quiz-option")[correctIndex].classList.add("correct"); quizResult.innerHTML=`Salah!<br>Jawaban benar: <b style="color:black">${options[correctIndex]}</b>`; quizResult.style.color="red"; }
+          setTimeout(()=>nextQuestion(), 900);
+        };
+        quizOptions.appendChild(btn);
+      });
+      quizOverlay.style.display = "flex";
+    }
+
+    function showTrueFalse(q) {
+      quizQuestion.textContent = q.question; quizOptions.innerHTML=""; quizResult.textContent="";
+      ["Benar","Salah"].forEach((label, idx)=>{
+        const btn = document.createElement("button");
+        btn.className="quiz-option"; btn.textContent=label;
+        btn.onclick = ()=>{
+          document.querySelectorAll(".quiz-option").forEach(b=>b.classList.remove("correct","wrong"));
+          const isCorrect = (idx===0 && q.correct===true) || (idx===1 && q.correct===false);
+          if (isCorrect) { btn.classList.add("correct"); quizResult.textContent="Benar!"; quizResult.style.color="green"; score++; }
+          else { btn.classList.add("wrong"); const correctBtn = document.querySelectorAll(".quiz-option")[ q.correct ? 0 : 1]; correctBtn.classList.add("correct"); quizResult.innerHTML=`Salah!<br>Jawaban benar: <b style="color:black">${q.correct ? "Benar" : "Salah"}</b>`; quizResult.style.color="red"; }
+          setTimeout(()=>nextQuestion(),900);
+        };
+        quizOptions.appendChild(btn);
+      });
+      quizOverlay.style.display = "flex";
+    }
+function showMultipleSelect(q) {
+  quizQuestion.textContent = q.question;
+  quizOptions.innerHTML = "";
+  quizResult.textContent = "";
+
+  const selected = new Set();
+  const btnList = []; // <--- simpan tombol pilihan saja
+
+  q.options.forEach((opt, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "quiz-option";
+    btn.textContent = opt;
+
+    btn.onclick = () => {
+      if (selected.has(idx)) {
+        selected.delete(idx);
+        btn.style.background = "";
+      } else {
+        selected.add(idx);
+        btn.style.background = "orange";
+      }
+    };
+
+    quizOptions.appendChild(btn);
+    btnList.push(btn);
+  });
+
+  const submit = document.createElement("button");
+  submit.textContent = "Kumpulkan Jawaban";
+  submit.className = "quiz-option submit-button";
+
+  submit.onclick = () => {
+    // 1️⃣ Reset highlight TAPI hanya tombol opsi (bukan tombol submit)
+    btnList.forEach(btn => btn.classList.remove("correct", "wrong"));
+
+    // 2️⃣ Highlight jawaban benar
+    q.correct.forEach(i => {
+      btnList[i].classList.add("correct");
+    });
+
+    // 3️⃣ Highlight salah (yang dipilih user tapi tidak benar)
+    selected.forEach(i => {
+      if (!q.correct.includes(i)) {
+        btnList[i].classList.add("wrong");
+      }
+    });
+
+    // 4️⃣ Nilai hanya kalau jawabannya benar semua
+    const allChosenCorrect =
+      [...selected].every(i => q.correct.includes(i)) &&
+      selected.size === q.correct.length;
+
+    if (allChosenCorrect) score++;
+
+    setTimeout(() => nextQuestion(), 1200);
+  };
+  quizOptions.appendChild(submit);
+  quizOverlay.style.display = "flex";
+}
+    function showMatching(q) {
+      quizQuestion.textContent=q.question; quizOptions.innerHTML=""; quizResult.textContent="";
+      const left=[...q.left], right=[...q.right];
+      const matchSelected = {}, selectMap={}, correctTextMap={};
+      left.forEach(leftItem=>{
+        const row = document.createElement('div'); row.style.margin="6px 0";
+        const label = document.createElement('span'); label.textContent = leftItem + " → ";
+        const select = document.createElement('select');
+        right.forEach(r=>{ const op=document.createElement('option'); op.value=r; op.textContent=r; select.appendChild(op); });
+        matchSelected[leftItem] = select.value; selectMap[leftItem]=select;
+        const correctText = document.createElement('div'); correctText.style.fontSize="12px"; correctText.style.color="#444"; correctText.style.marginTop="3px"; correctText.style.display="none"; correctTextMap[leftItem]=correctText;
+        select.onchange = ()=>{ matchSelected[leftItem]=select.value; correctText.style.display='none'; };
+        row.appendChild(label); row.appendChild(select); row.appendChild(correctText); quizOptions.appendChild(row);
+      });
+      const submit = document.createElement("button"); submit.textContent="Kumpulkan Jawaban"; submit.className="quiz-option submit-button";
+      submit.onclick = ()=>{
+        let allCorrect=true; Object.values(selectMap).forEach(sel=> sel.classList.remove("correct","wrong"));
+        left.forEach(leftItem=>{
+          const userAns = selectMap[leftItem].value;
+          const correctAns = q.correct[leftItem];
+          const sel = selectMap[leftItem]; const textBox = correctTextMap[leftItem];
+          if(userAns === correctAns) { sel.classList.add("correct"); textBox.style.display='none'; } else { sel.classList.add("wrong"); textBox.textContent = "Jawaban benar: "+correctAns; textBox.style.display='block'; allCorrect=false; }
+        });
+        if(allCorrect){ quizResult.textContent="Benar!"; quizResult.style.color="green"; score++; } else { quizResult.textContent="Salah!"; quizResult.style.color="red"; }
+        setTimeout(()=>nextQuestion(),900);
+      };
+      quizOptions.appendChild(quizResult); quizOptions.appendChild(submit); quizOverlay.style.display='flex';
+    }
+
+    function nextQuestion() {
+      quizOverlay.style.display='none';
+      setTimeout(()=>{
+        currentQuestionIndex++;
+        if(currentQuestionIndex < quizQuestions.length){ loadQuestion(); return; }
+        // selesai
+        quizQuestion.textContent = "Quiz selesai!";
+        quizOptions.innerHTML = "";
+        quizResult.innerHTML = `<b>Nilai kamu: ${score} / ${quizQuestions.length}</b><br>`;
+        currentScore = score;
+        showResultScreen();
+      }, 300);
+    }
+
+    quizClose.onclick = ()=> quizOverlay.style.display = 'none';
+
+     // ---------- CERTIFICATE GENERATION ----------
+    const finalFrameCanvas = document.createElement('canvas');
+
+    function generateDefaultCertificate(scoreValue) {
+      const frame = finalFrameCanvas;
+      frame.width = 720;
+      frame.height = 900;
+      const fctx = frame.getContext('2d');
+
+      // background
+      fctx.fillStyle = "#ffffff";
+      fctx.fillRect(0,0,frame.width,frame.height);
+
+      // border
+      fctx.strokeStyle = "#c9a451";
+      fctx.lineWidth = 12;
+      fctx.strokeRect(14,14,frame.width-28,frame.height-28);
+
+      // title
+      fctx.fillStyle = "#222";
+      fctx.font = "42px serif";
+      fctx.textAlign = "center";
+      fctx.fillText("SERTIFIKAT QUIZ", frame.width/2, 100);
+
+      // name
+      fctx.font = "28px Arial";
+      fctx.fillText((localStorage.getItem("username") || "User").toUpperCase(), frame.width/2, 220);
+
+      // score
+      fctx.font = "24px Arial";
+      fctx.fillText(`Nilai: ${scoreValue} / ${quizQuestions.length}`, frame.width/2, 280);
+
+      // description
+      fctx.font = "18px Arial";
+      fctx.fillText("Telah menyelesaikan quiz kelas XII-3", frame.width/2, 340);
+
+      return frame.toDataURL("image/png");
+    }
+
+    function showResultScreen() {
+      // set text
+      resultScoreEl.textContent = `Nilai: ${currentScore} / ${quizQuestions.length}`;
+      resultDetailEl.textContent = `Kamu menjawab ${currentScore} dari ${quizQuestions.length} pertanyaan dengan benar.`;
+
+     // 🔥 BUAT & SIMPAN SERTIFIKAT DEFAULT JIKA BELUM FOTO
+  const img = generateDefaultCertificate(currentScore, null);
+  localStorage.setItem("certificate_img_static", img);
+
+  // tampilkan preview
+  certPreviewImg.src = img;
+  certificateImage.src = img;
+
+  // tampilkan layar hasil
+  resultScreen.style.display = 'flex';
+  resultScreen.setAttribute('aria-hidden', 'false');
+}
+
+    // ---------- CAMERA / PHOTO (opsional) ----------
+    async function openCameraForCapture() {
+      cameraContainer.style.display = 'flex';
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        currentStream = stream;
+        cameraVideo.srcObject = stream;
+        cameraVideo.play();
+        // countdown
+        cameraCountdownEl.style.display = 'block';
+        let count = 3;
+        cameraCountdownEl.textContent = count;
+        await new Promise(res => {
+          const iv = setInterval(()=> {
+            count--;
+            cameraCountdownEl.textContent = count;
+            if (count <= 0) { clearInterval(iv); cameraCountdownEl.style.display = 'none'; res(); }
+          }, 1000);
+        });
+        // small pause then capture
+        await new Promise(r=>setTimeout(r,400));
+        capturePhoto();
+      } catch(err) {
+        alert('Tidak dapat membuka kamera: ' + (err.message || err));
+        cameraContainer.style.display = 'none';
+        stopCurrentStream();
+      }
+    }
+
+    function capturePhoto() {
+      const video = cameraVideo;
+      const canvas = snapshotCanvas;
+      const w = video.videoWidth || 640;
+      const h = video.videoHeight || 480;
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, w, h);
+      const photoData = canvas.toDataURL('image/png');
+
+       if (cameraMode === "quiz") {
+    const finalData = generateDefaultCertificate(currentScore, photoData);
+    localStorage.setItem("certificate_img_static", finalData);
+    certificateImage.src = finalData;
+  }
+
+	if (cameraMode === "updateCertificate") {
+    const finalData = generateDefaultCertificate(null, photoData);
+    localStorage.setItem("certificate_img_static", finalData);
+    certificateImage.src = finalData;
+  }
+
+
+      // compose certificate with photo (overlay)
+      const frame = finalFrameCanvas;
+      frame.width = 720;
+      frame.height = 900;
+      const fctx = frame.getContext('2d');
+
+      // base background & border
+      fctx.fillStyle = "#ffffff";
+      fctx.fillRect(0,0,frame.width,frame.height);
+      fctx.strokeStyle = "#c9a451"; fctx.lineWidth = 12; fctx.strokeRect(14,14,frame.width-28,frame.height-28);
+
+      // title
+      fctx.fillStyle = "#222";
+      fctx.font = "42px serif";
+      fctx.textAlign = "center";
+      fctx.fillText("SERTIFIKAT QUIZ", frame.width/2, 100);
+
+      // place photo (center-left)
+      const img = new Image();
+      img.onload = () => {
+        // draw photo as rounded rect
+        const pw = 320, ph = 320, px = (frame.width/2) - (pw/2), py = 160;
+        // draw white background
+        fctx.fillStyle = "#f4f4f4"; fctx.fillRect(px-8, py-8, pw+16, ph+16);
+        // draw image
+        fctx.drawImage(img, px, py, pw, ph);
+        // text
+        fctx.font = "28px Arial"; fctx.fillStyle="#000"; fctx.fillText((localStorage.getItem("username") || "User").toUpperCase(), frame.width/2, py + ph + 60);
+        fctx.font = "22px Arial"; fctx.fillText(`Nilai: ${currentScore} / ${quizQuestions.length}`, frame.width/2, py + ph + 100);
+
+        // finalize
+        const finalData = frame.toDataURL('image/png');
+        localStorage.setItem('certificate_img_static', finalData);
+        certPreviewImg.src = finalData;
+        certificateImage.src = finalData;
+        stopCurrentStream();
+        cameraContainer.style.display = 'none';
+        certificatePage.style.display = 'block';
+	chatContainer.style.display = 'none';
+	resultScreen.style.display = 'none';
+
+      };
+      img.src = photoData;
+    }
+
+    function stopCurrentStream() {
+      if (currentStream) {
+        currentStream.getTracks().forEach(t=>t.stop());
+        currentStream = null;
+      }
+      if (cameraVideo) cameraVideo.srcObject = null;
+    }
+
+    // ---------- BUTTON HANDLERS ----------
+    viewCertificateBtn.addEventListener('click', ()=> {
+      // show full certificate page
+      resultScreen.style.display = 'none';
+      certificatePage.style.display = 'block';
+    });
+
+    takePhotoBtn.addEventListener('click', async ()=> {
+      // show camera area and start
+      await openCameraForCapture();
+    });
+
+    returnToMenuBtn.addEventListener('click', ()=> {
+      certificatePage.style.display = 'none';
+      chatContainer.style.display = 'grid';
+    });
+
+    returnToChatBtn.addEventListener('click', ()=> {
+      // close modal & return to chat
+      resultScreen.style.display = 'none';
+      chatContainer.style.display = 'grid';
+    });
+
+    downloadCertificateBtn.addEventListener('click', ()=> {
+      const img = localStorage.getItem('certificate_img_static');
+      if(!img){ alert('Belum ada sertifikat.'); return; }
+      const a = document.createElement('a'); a.href = img; a.download = 'sertifikat_quiz.png'; document.body.appendChild(a); a.click(); a.remove();
+    });
+    downloadCertificateBtn_small.addEventListener('click', ()=> downloadCertificateBtn.click());
+
+    document.getElementById("openCertificateBtn").addEventListener("click", () => {
+  let img = localStorage.getItem("certificate_img_static");
+
+  // Jika belum ada sertifikat sama sekali → buat default
+  if (!img) {
+    img = generateDefaultCertificate(0); // nilai default: 0
+    localStorage.setItem("certificate_img_static", img);
+  }
+
+  certificateImage.src = img;
+
+  // tampilkan halaman sertifikat
+  certificatePage.style.display = "block";
+  chatContainer.style.display = "none";
+  resultScreen.style.display = "none";
+});
+
+ updatePhotoBtn.addEventListener("click", () => {
+  cameraMode = "updateCertificate";
+  openCameraForCapture();
+});
+
+
+    // ---------- DARK MODE ----------
+    // load
+    if (localStorage.getItem("darkmode") === "on") {
+      document.body.classList.add("dark");
+      toggleDarkBtn.textContent = "Dark Mode: On";
+    } else {
+      toggleDarkBtn.textContent = "Dark Mode: Off";
+    }
+    toggleDarkBtn.addEventListener("click", () => {
+      const isDark = document.body.classList.toggle("dark");
+      toggleDarkBtn.textContent = "Dark Mode: " + (isDark ? "On" : "Off");
+      localStorage.setItem("darkmode", isDark ? "on" : "off");
+    });
+
+function logout() {
+  // Hapus SEMUA data di browser
+  localStorage.clear();
+
+  // Reset tampilan aplikasi
+  document.body.classList.remove("dark");
+  certificatePage.style.display = "none";
+  chatContainer.style.display = "none";
+  resultScreen.style.display = "none";
+  mainScreen.style.display = "none";
+
+  // Kembali ke halaman login
+  loginScreen.style.display = "flex";
+
+  // Reset input username
+  usernameInput.value = "";
+
+  // Reset variabel global
+  currentQuestionIndex = 0;
+  currentScore = 0;
+}
+
+    // ---------- INITIALIZE UI HANDLERS ----------
+    sendBtn.addEventListener('click', handleSend);
+    inputEl.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); handleSend(); } });
+    clearBtn.addEventListener('click', ()=>{ if(confirm('Hapus semua riwayat chat?')) clearHistory(); });
+    downloadBtn.addEventListener('click', downloadHistory);
+    toggleDelayBtn.addEventListener('click', ()=>{ simulateDelay = !simulateDelay; toggleDelayBtn.textContent = 'Delay: ' + (simulateDelay ? 'On' : 'Off'); });
+    document.querySelectorAll('.suggest').forEach(btn=> btn.addEventListener('click', ()=>{ inputEl.value = btn.dataset.msg; inputEl.focus(); }));
+    logoutBtn.addEventListener("click", () => {
+  logout();
+});
+  
+
+window.addEventListener("load", () => {
+  resultScreen.style.display = "none";
+  certificatePage.style.display = "none";
+  quizOverlay.style.display = "none";
+
+if (localStorage.getItem("username")) {
+    chatContainer.style.display = "grid";
+    loginScreen.style.display = "none";
+  }
+
+});
+
+function scrollToBottom(force = false) {
+  const distanceFromBottom =
+    messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight;
+
+  if (force || distanceFromBottom < 120) {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    scrollBottomBtn.style.display = "none";
+  }
+
+messagesEl.addEventListener("scroll", () => {
+  const distanceFromBottom =
+    messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight;
+
+  if (distanceFromBottom > 150) {
+    scrollBottomBtn.style.display = "block";
+  } else {
+    scrollBottomBtn.style.display = "none";
+  }
+});
+
+// klik tombol -> scroll ke bawah
+scrollBottomBtn.addEventListener("click", () => {
+  scrollToBottom(true);
+});
+
+
+}
+
+    // load history & greeting
+    loadHistory();
+    if(!localStorage.getItem(STORAGE_KEY)){
+      appendMessage({who:'bot', text:'Halo! Saya Cosphatre bot — coba ketik "Halo", "fitur", atau nomor/ nama siswa untuk Info.'});
+      saveMessage({who:'bot', text:'Halo! Saya Cosphatre bot — coba ketik "Halo", "fitur", atau nomor/ nama siswa untuk Info.', ts:Date.now()});
+    }
+    inputEl.focus();
+    inputEl.addEventListener('input', () => { inputEl.style.height = 'auto'; inputEl.style.height = inputEl.scrollHeight + 'px'; });
+
+
+
+    // debug
+    console.log("UI ready. chatContainer id:", chatContainer ? "ok" : "missing");
+
+  </script>
+</body>
+</html>
